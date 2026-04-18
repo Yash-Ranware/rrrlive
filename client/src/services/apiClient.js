@@ -1,10 +1,10 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: `${import.meta.env.VITE_API_URL}/api`,
+  baseURL: "http://localhost:5000/api",
 });
 
-// attach token automatically
+// attach token automatically (future use)
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
 
