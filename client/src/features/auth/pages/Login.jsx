@@ -1,3 +1,5 @@
+// client/src/features/auth/pages/Login.jsx
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../authService";
@@ -5,13 +7,15 @@ import { useAuth } from "../authContext";
 
 const Login = () => {
   const navigate = useNavigate();
-
-  const { login: loginUser } = useAuth(); // ✅ FIX
+  const { login: loginUser } = useAuth();
 
   const [form, setForm] = useState({
     email: "",
     password: "",
   });
+
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -19,35 +23,84 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
 
     try {
       const res = await login(form);
-
       const { token, user } = res.data.data;
 
-      // ✅ use context login
       loginUser({ token, user });
 
-      // redirect based on role
       if (user.role === "admin") navigate("/admin");
       else if (user.role === "teacher") navigate("/teacher");
       else navigate("/student");
 
     } catch (err) {
-      console.error(err.response?.data?.message);
+      setError(err.response?.data?.message || "Login failed");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex h-screen justify-center items-center">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <h2>Login</h2>
+    <div className="h-screen flex items-center justify-center bg-gray-100">
 
-        <input name="email" placeholder="Email" onChange={handleChange} />
-        <input name="password" placeholder="Password" onChange={handleChange} />
+      <div className="bg-white w-[380px] p-8 rounded-2xl shadow-xl transition-all duration-300 hover:shadow-2xl">
 
-        <button type="submit">Login</button>
-      </form>
+        <h2 className="text-2xl font-bold text-gray-800 text-center mb-2">
+          Welcome Back
+        </h2>
+        <p className="text-gray-500 text-sm text-center mb-6">
+          Please login to your account
+        </p>
+
+        {error && (
+          <p className="text-red-500 text-sm text-center mb-4">
+            {error}
+          </p>
+        )}
+
+        {/* ✅ noValidate added */}
+        <form onSubmit={handleSubmit} noValidate className="space-y-5">
+
+          <input
+            name="email"
+            type="text"
+            placeholder="Email or Username"
+            onChange={handleChange}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+
+          <input
+            name="password"
+            type="text"  // ✅ no restrictions at all
+            placeholder="Password"
+            onChange={handleChange}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 rounded-lg bg-blue-600 text-white font-semibold transition hover:bg-blue-700"
+          >
+            {loading ? "Logging in..." : "Login"}
+          </button>
+
+        </form>
+
+        <p className="text-gray-500 text-sm text-center mt-6">
+          Don’t have an account?{" "}
+          <span
+            onClick={() => navigate("/register")}
+            className="text-blue-600 font-medium hover:underline cursor-pointer"
+          >
+            Register
+          </span>
+        </p>
+
+      </div>
     </div>
   );
 };
